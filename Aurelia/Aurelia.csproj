@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.InteractivityAddon.Labs" Version="2.4.1-labs-20210709.1" />
+    <PackageReference Include="Discord.Net.Labs" Version="3.1.1" />
+    <PackageReference Include="Discord.Net.Labs.Commands" Version="3.0.1" />
+    <PackageReference Include="Discord.Net.Labs.Core" Version="3.1.1" />
+    <PackageReference Include="Discord.Net.Labs.WebSocket" Version="3.1.1" />
+    <PackageReference Include="IKVM" Version="8.1.5717" />
+    <PackageReference Include="ImageProcessor" Version="2.9.1" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="8.3.2" />
+    <PackageReference Include="Magick.NET.Core" Version="8.3.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+    <PackageReference Include="MongoDB.Bson" Version="2.13.1" />
+    <PackageReference Include="MongoDB.Driver" Version="2.13.1" />
+    <PackageReference Include="MongoDB.Driver.Core" Version="2.13.1" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
+    <PackageReference Include="System.Runtime" Version="4.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="assets\fonts\made_tommy_soft\" />
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="bin\MADE Tommy Soft Bold PERSONAL USE.otf" />
+  </ItemGroup>
+
+</Project>
