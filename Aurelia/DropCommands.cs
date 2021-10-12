@@ -15,8 +15,6 @@ namespace Aurelia
             try
             {
                 //Embed
-                string path = $"assets/droppedCards/{cardid}1card.png";
-
                 ImageProcessor.ImageBuilder(idol[1], idol[0], idol[2], rarity, internalRarity, cardid, "droppedCards");
                 Database.InsertCard(cardid, idol[1], idol[0], idol[2], idol[3], internalRarity, user.Id, 0);
                 Database.AddCardToInventory(user.Id, cardid);

@@ -113,63 +113,65 @@ namespace Aurelia
                     break;
             }
         }
-        private async Task MySlashCommandHandler(SocketSlashCommand interaction)
+        private async Task MySlashCommandHandler(SocketSlashCommand command)
         {
 
             try
-            {
-                int check = DropCommands.UserBasisCheck(interaction.User);
+            {   
+                int check = DropCommands.UserBasisCheck(command.User);
                 switch (check)
                 {
                     case 0:
                         break;
                     case 1:
-                        Database.AddUser(interaction.User.Id);
-                        return;
+                        Database.AddUser(command.User.Id);
+                        break;
                 }
-                if (interaction.Data.Name == "drop")
+                if (command.Data.Name == "drop")
                 {
-                    _ = interaction.DeferAsync();
+                    _ = command.DeferAsync();
                     if (check == 2)
                     {
-                        await interaction.FollowupAsync("> **You have too many cards in your inventory. Please remove some before you drop again!**");
+                        await command.FollowupAsync("> **You have too many cards in your inventory. Please remove some before you drop again!**");
                         return;
                     }
-                    string cardid = DropCommands.randomIdoldInfo(interaction.User, 1);
-                    int internalRarity = DropCommands.randomIdoldInfo(interaction.User, 2);
-                    string rarity = DropCommands.randomIdoldInfo(interaction.User, 3);
-                    List<string> idol = DropCommands.randomIdoldInfo(interaction.User, 4);
-                    Embed emb = DropCommands.Drop(interaction.User, cardid.Remove(0, 1), internalRarity, idgenerator.rarityTranslator(internalRarity, 0), idol);
+                    string cardid = DropCommands.randomIdoldInfo(command.User, 1);
+                    int internalRarity = DropCommands.randomIdoldInfo(command.User, 2);
+                    string rarity = DropCommands.randomIdoldInfo(command.User, 3);
+                    List<string> idol = DropCommands.randomIdoldInfo(command.User, 4);
+                    Embed emb = DropCommands.Drop(command.User, cardid.Remove(0, 1), internalRarity, idgenerator.rarityTranslator(internalRarity, 0), idol);
                     Console.WriteLine($"assets/droppedCards/{cardid.Remove(0, 1)}1card.png");
-                    Database.AlbumAddCard(interaction.User.Id, idol[0], idol[2]);
-                    _ = interaction.FollowupWithFileAsync(null, filePath: $"assets/droppedCards/{cardid.Remove(0, 1)}1card.png", fileName: $"{cardid.Remove(0, 1)}1card.png", embed: emb);
+                    Database.AlbumAddCard(command.User.Id, idol[0], idol[2]);
+                    Database.AddUserXpOrLevel(command.User.Id, internalRarity * 5);
+                    Levelsystem.CheckUserLevelUp(command.User.Id);
+                    _ = command.FollowupWithFileAsync(null,$"assets/droppedCards/{cardid.Remove(0, 1)}1card.png", fileName: $"{cardid.Remove(0, 1)}1card.png", embed: emb);
                     File.Delete($"assets/droppedCards/{cardid.Remove(0, 1)}1card.png");
                     File.Delete($"assets/droppedCards/{cardid.Remove(0, 1)}card.png");
                 }
-                if (interaction.Data.Name == "inventory")
+                if (command.Data.Name == "inventory")
                 {
                     
                     bool privat = true;
                     try
                     {
-
-                        if (interaction.Data.Options != null)
+                        Console.WriteLine(command.Data.Options.FirstOrDefault().Value);
+                        if (command.Data != null)
                         {
-                            privat = Convert.ToBoolean(interaction.Data.Options.First().Value);
+                            privat = Convert.ToBoolean(command.Data.Options.FirstOrDefault().Value);
                         }
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex);
                     }
-                    await interaction.DeferAsync(ephemeral: privat);
-                    Embed emb = UserCommands.Inventory(interaction.User);
-                    ComponentBuilder builder = UserCommands.Inventory(interaction.User, true);
-                    await interaction.FollowupAsync(ephemeral: privat, embed: emb, component: builder.Build(), options: null);
+                    await command.DeferAsync(ephemeral: privat);
+                    Embed emb = UserCommands.Inventory(command.User);
+                    ComponentBuilder builder = UserCommands.Inventory(command.User, true);
+                    await command.FollowupAsync(ephemeral: privat, embed: emb, component: builder.Build(), options: null);
                 }
-                if (interaction.Data.Name == "view")
+                if (command.Data.Name == "view")
                 {
-                    await interaction.DeferAsync();
+                    await command.DeferAsync();
                     // Declaring up needed variables
                     string filename = "";
                     string idolName = "";
@@ -178,7 +180,7 @@ namespace Aurelia
                     string rarity = "";
                     int internalRarity = 0;
                     // Getting the Cardid from the command
-                    string cardid = interaction.Data.Options.First().Value.ToString();
+                    string cardid = command.Data.Options.FirstOrDefault().Value.ToString();
 
                     // Removing the # if necessary
                     if (cardid.StartsWith("#"))
@@ -203,64 +205,64 @@ namespace Aurelia
                     }
                     catch (Exception ex)
                     {
-                        await interaction.FollowupAsync($"> {interaction.User.Mention} Hmm. I did not find your card in your inventory. Did you really give me the correct card id?", ephemeral: true);
+                        await command.FollowupAsync($"> {command.User.Mention} Hmm. I did not find your card in your inventory. Did you really give me the correct card id?", ephemeral: true);
                         return;
                     }
 
                     // Checking if author == owner of the card
-                    SocketUser author = interaction.User;
-                    if (owner != interaction.User.Id)
+                    SocketUser author = command.User;
+                    if (owner != command.User.Id)
                     {
                         author = _client.GetUser(owner);
                     }
                     if (author is null)
                     {
-                        await interaction.FollowupAsync($"> {interaction.User.Mention} Hmm. That is not your card.", ephemeral: true);
+                        await command.FollowupAsync($"> {command.User.Mention} Hmm. That is not your card.", ephemeral: true);
                         return;
                     }
                     // Building Image, Embed and Sending the message 
                     ImageProcessor.ImageBuilder(filename, idolName, group, rarity, internalRarity, cardid, "viewCards");
                     var emb = DropCommands.ViewEmbed(author, cardid, internalRarity, idolName, group);
-                    await interaction.FollowupWithFileAsync(null, filePath: $"assets/viewCards/{cardid}1card.png", fileName: $"{cardid}1card.png", embed: emb);
+                    await command.FollowupWithFileAsync(null, $"assets/viewCards/{cardid}1card.png", fileName: $"{cardid}1card.png", embed: emb);
                     File.Delete($"assets/viewCards/{cardid}1card.png");
                     File.Delete($"assets/viewCards/{cardid}card.png");
-
+                    
                 }
-                if (interaction.Data.Name == "profile")
+                if (command.Data.Name == "profile")
                 {
-                    Embed emb = UserCommands.UserProfile(interaction.User);
-                    await interaction.RespondAsync(embed: emb);
+                    Embed emb = UserCommands.UserProfile(command.User);
+                    await command.RespondAsync(embed: emb);
                 }
-                if (interaction.Data.Name == "sell")
+                if (command.Data.Name == "sell")
                 {
-                    string cardid = interaction.Data.Options.FirstOrDefault().Value.ToString();
+                    string cardid = command.Data.Options.FirstOrDefault().Value.ToString();
                     if (cardid.StartsWith("#"))
                     {
-                        cardid = interaction.Data.Options.FirstOrDefault().Value.ToString().Remove(0,1);
+                        cardid = command.Data.Options.FirstOrDefault().Value.ToString().Remove(0,1);
                     }
                     UserCommands.Idol card = Database.FindCard(cardid);
                     if (card.exists == false)
                     {
-                        await interaction.RespondAsync($"> ***I couldn't find a card with the Id of*** **`#{interaction.Data.Options.FirstOrDefault().Value.ToString()}`** \n > *Did you provide the **__correct__** Id?*", ephemeral: true);
+                        await command.RespondAsync($"> ***I couldn't find a card with the Id of*** **`#{command.Data.Options.FirstOrDefault().Value.ToString()}`** \n > *Did you provide the **__correct__** Id?*", ephemeral: true);
                         return;
                     }
-                    UserCommands.MemBase.SellCardValues.Remove(interaction.User.Id);
-                    UserCommands.MemBase.SellCardValues.Add(interaction.User.Id, (cardid, card.internalRarity)); 
+                    UserCommands.MemBase.SellCardValues.Remove(command.User.Id);
+                    UserCommands.MemBase.SellCardValues.Add(command.User.Id, (cardid, card.internalRarity)); 
                     Embed emb = new EmbedBuilder()
                         .WithCurrentTimestamp()
                         .WithColor(idgenerator.rarityTranslator(card.internalRarity, 1))
                         .WithTitle("Are you sure?")
                         .WithDescription($"*You are about to sell:* \n > ➼ `{idgenerator.rarityTranslator(card.internalRarity, true)}` • **{card.idolName}** | {card.group} \n > That will bring you **`{idgenerator.GetRarityPrice(card.internalRarity)}`**🪙")
                         .Build();
-                    await interaction.RespondAsync(null, embed: emb, component: ButtonHandler.AcceptAndDenyButtonsSell(1).Build());
+                    await command.RespondAsync(null, embed: emb, component: ButtonHandler.AcceptAndDenyButtonsSell(1).Build());
                 }
-                if (interaction.Data.Name == "sellall")
+                if (command.Data.Name == "sellall")
                 {
 
-                    int internalRarity = Convert.ToInt32(interaction.Data.Options.FirstOrDefault().Value);
-                    UserCommands.MemBase.SellAllCardList.Remove(interaction.User.Id);
-                    var filteredUserInventory = Database.GetCardsWithRarity(interaction.User.Id, internalRarity);
-                    UserCommands.MemBase.SellAllCardList.Add(interaction.User.Id, (filteredUserInventory));
+                    int internalRarity = Convert.ToInt32(command.Data.Options.FirstOrDefault().Value);
+                    UserCommands.MemBase.SellAllCardList.Remove(command.User.Id);
+                    var filteredUserInventory = Database.GetCardsWithRarity(command.User.Id, internalRarity);
+                    UserCommands.MemBase.SellAllCardList.Add(command.User.Id, (filteredUserInventory));
                     List<string> embedTextInventory = new();
                     int price = 0;
                     foreach (var item in filteredUserInventory)
@@ -270,7 +272,7 @@ namespace Aurelia
                     }
                     if (price == 0 || filteredUserInventory.Count == 0)
                     {
-                        await interaction.RespondAsync("``` I didn't find any cards to sell with that rarity ```", ephemeral: true);
+                        await command.RespondAsync("``` I didn't find any cards to sell with that rarity ```", ephemeral: true);
                         return;
                     }
                     Embed emb = new EmbedBuilder()
@@ -279,20 +281,58 @@ namespace Aurelia
                         .WithTitle("Are you sure?")
                         .WithDescription($"*You are about to sell:* \n {String.Join("\n", embedTextInventory)} \n > That will bring you **`{price}`**🪙")
                         .Build();
-                    await interaction.RespondAsync(null, embed: emb, component: ButtonHandler.AcceptAndDenyButtonsSell(2).Build());
+                    await command.RespondAsync(null, embed: emb, component: ButtonHandler.AcceptAndDenyButtonsSell(2).Build());
                 }
-                if (interaction.Data.Name == "balance")
+                if (command.Data.Name == "balance")
                 {
-                    int balance = Database.UserBalance(interaction.User.Id);
+                    int balance = Database.UserBalance(command.User.Id);
                     Embed emb = new EmbedBuilder()
                         .WithCurrentTimestamp()
-                        .WithAuthor(interaction.User.Username)
-                        .WithFooter("👑", iconUrl: interaction.User.GetAvatarUrl())
+                        .WithAuthor(command.User.Username)
+                        .WithFooter("👑", iconUrl: command.User.GetAvatarUrl())
                         .WithColor(Discord.Color.Gold)
                         .WithTitle("Your personal bank account")
-                        .WithDescription($"You currently have: \n \n > **`{balance}`** 🪙 \n > **`{Database.UserDiamonds(interaction.User.Id)}`** 💎 \n")
+                        .WithDescription($"You currently have: \n \n > **`{balance}`** 🪙 \n > **`{Database.UserDiamonds(command.User.Id)}`** 💎 \n")
                         .Build();
-                    await interaction.RespondAsync(null, embed: emb);
+                    await command.RespondAsync(null, embed: emb);
+                }
+                if (command.Data.Name == "daily")
+                {
+                    var emb = UserCommands.DailyDrop(command.User.Id);
+                    if (Levelsystem.CheckUserLevelUp(command.User.Id) == true)
+                    {
+                        await command.RespondAsync($"{command.User.Mention} you just leveled up to** level {Database.UserLevel(command.User.Id, 0)}**!", ephemeral: true);
+                    }
+                    await command.RespondAsync(null, embed: emb);
+
+                }
+                if (command.Data.Name == "album")
+                {
+                    string group = (string)command.Data.Options.FirstOrDefault().Value;
+                    Console.WriteLine(group);
+                    var emb = UserCommands.UserAlbums(command.User, group);
+                    await command.RespondAsync(null, embed: emb);
+                }
+                if (command.Data.Name == "create")
+                {
+                    string fieldName = command.Data.Options.First().Name;
+                    switch (fieldName)
+                    {
+                        case "group":
+                            Console.WriteLine("group");
+                            break;
+                        case "company":
+                            Console.WriteLine("company");
+                            string companyName = command.Data.Options.First().Options.First().Value.ToString();
+                            Console.WriteLine(companyName);
+                            await command.RespondAsync(null, embed: companies.CreateCompany(command.User.Id, companyName));
+                            break;
+                        case "song":
+                            Console.WriteLine("song");
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
             catch (Exception ex)

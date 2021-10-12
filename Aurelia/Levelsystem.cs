@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Aurelia
 {
@@ -16,9 +14,10 @@ namespace Aurelia
         {
             int userLevel = Database.UserLevel(userid, 0);
             int userxp = Database.UserLevel(userid, 1);
-            if (Math.Ceiling(Convert.ToDecimal(Math.Pow(Convert.ToDouble(userxp), 0.2))) > userLevel)
+            decimal newLevel = Math.Floor(Convert.ToDecimal(Math.Pow(Convert.ToDouble(userxp), 0.2)));
+            if (newLevel > userLevel)
             {
-                Database.AddUserXpOrLevel(userid);
+                Database.AddUserLevel(userid, Convert.ToInt32(newLevel));
                 return true;
             }
             else return false;

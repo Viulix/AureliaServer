@@ -2,13 +2,14 @@
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Aurelia
 {
     public class Database
     {
-        static IMongoClient client = new MongoClient("Your mongo connection string");
+        static IMongoClient client = new MongoClient("");
         static IMongoDatabase db = client.GetDatabase("Aurelia");
         static IMongoCollection<User> userCollection = db.GetCollection<User>("user");
         static IMongoCollection<Card> cardidCollection = db.GetCollection<Card>("cardids");
@@ -191,6 +192,29 @@ namespace Aurelia
             if (indicator == 1) return xp;
             else return level;
         }
+        public static long UserDailyStamp(ulong userid)
+        {
+            var results = userCollection.Find(p => p.id == userid).ToList();
+            long timestamp = 0;
+            foreach (var item in results)
+            {
+                timestamp = item.dailystamp;     
+            }
+            return timestamp;
+        }
+        public static void UserUpdateDailyStamp(ulong userid)
+        {
+            try
+            {
+                var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                var update = Builders<User>.Update.Set<long>(e => e.dailystamp, timestamp);
+                userCollection.FindOneAndUpdate(x => x.id == userid, update);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
         public static List<Card> UserInventory(string cardid, bool yee)
         {
             var results = cardidCollection.Find(p => p.id == cardid).ToList();
@@ -236,16 +260,50 @@ namespace Aurelia
                 Console.WriteLine(ex);
             }
         }
-        public static void AddUserXpOrLevel(ulong userid)
+        public static void AddUserDiamonds(ulong userid, int diamondAmount)
         {
             try
             {
-                var update = Builders<User>.Update.Inc<int>(e => e.lvl, 1);
+                var update = Builders<User>.Update.Inc<int>(e => e.diamonds, diamondAmount);
                 userCollection.FindOneAndUpdate(x => x.id == userid, update);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
+            }
+        }
+        public static void AddUserLevel(ulong userid, int lvl)
+        {
+            try
+            {
+                var update = Builders<User>.Update.Inc<int>(e => e.lvl, lvl);
+                userCollection.FindOneAndUpdate(x => x.id == userid, update);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+        public static List<object> GetUserGroupAlbum(ulong userid, string group)
+        {
+
+            try
+            {
+                List<User> result = userCollection.Find(x => x.id == userid).ToList();
+                List<object> finalResult = new();
+                StringBuilder sb = new();
+                foreach (User item in result)
+                {
+                    var groupObj = item.albums.GetType().GetProperty(group).GetValue(item.albums);
+                    finalResult.Add(groupObj);
+                }
+                return finalResult;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return null;
             }
         }
         public static void AlbumAddCard(ulong userid, string IdolName, string group)
@@ -255,6 +313,7 @@ namespace Aurelia
             {
                 var update = Builders<User>.Update.Inc<Album>(e => e.albums, new Album());
                 List<User> result = userCollection.Find(x => x.id == userid).ToList();
+                List<User> checkResult = userCollection.Find(x => x.id == userid).ToList();
                 foreach (User item in result)
                 {
                     var groupObj = item.albums.GetType().GetProperty(group).GetValue(item.albums);
@@ -263,6 +322,22 @@ namespace Aurelia
                     if (value == 0)
                     {
                         check.SetValue(groupObj, 1);
+                    }
+                    bool proof = true;
+                    foreach (var idol in groupObj.GetType().GetProperties())
+                    {
+                        var it = Convert.ToInt32(idol.GetValue(groupObj));
+                        Console.WriteLine(it);
+                        if (it == 0 && idol.Name != "Complete")
+                        {
+                            proof = false;
+                        }
+                    }
+                    var completedCheck = groupObj.GetType().GetProperty("Complete");
+                    var value2 = Convert.ToInt32(completedCheck.GetValue(groupObj));
+                    if (value2 == 0 && proof is true)
+                    {
+                        completedCheck.SetValue(groupObj, 1);
                     }
                     update = Builders<User>.Update.Set<Album>(e => e.albums, item.albums);
                 }

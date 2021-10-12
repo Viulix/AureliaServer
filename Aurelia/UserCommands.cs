@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Discord.WebSocket;
+using System.Text;
 
 namespace Aurelia
 {
@@ -150,5 +151,103 @@ namespace Aurelia
             Database.AddMoneyToUser(userid, idgenerator.GetRarityPrice(internalRarity));
             Console.WriteLine("Done.");
         }
+        public static Embed DailyDrop(ulong userid)
+        {
+            long userTimestamp = Database.UserDailyStamp(userid);
+            if (userTimestamp + 86400 <= new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds())
+            {
+                // Defining random values that the user receives
+                Random rnd = new();
+                int xp = rnd.Next(75, 200);
+                int coins = rnd.Next(200, 400);
+                int diamonds = rnd.Next(1, 3);
+
+                // Adding all values to the user's profile
+                Database.AddUserXpOrLevel(userid, xp);
+                Database.AddMoneyToUser(userid, coins);
+                Database.AddUserDiamonds(userid, diamonds);
+                Database.UserUpdateDailyStamp(userid);
+
+                // Make Embed
+                Embed emb = new EmbedBuilder()
+                    .WithTitle("Your daily drop is here!")
+                    .WithColor(Discord.Color.Teal)
+                    .WithDescription($"You received: \n \n > **`{xp}`XP** \n > **`{coins}`🪙** \n > **`{diamonds}`💎**")
+                    .Build();
+                return emb;
+            }
+            else
+            {
+                // Determining the time the user has to wait for the next drop
+                long waitTime = (userTimestamp + 86400) - new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                Console.WriteLine(waitTime);
+                int timeHours = Convert.ToInt32(waitTime / 3600);
+                int timeMinuts = Convert.ToInt32((waitTime / 60) % 60);
+
+                Embed emb = new EmbedBuilder()
+                    .WithTitle("Oh.. Please wait a bit longer...")
+                    .WithColor(Discord.Color.Teal)
+                    .WithDescription($"Calm down. Please wait `{timeHours}h{timeMinuts}m` until you get your daily drop again!")
+                    .Build();
+                return emb;
+            }
+        }
+        public static Embed UserAlbums(SocketUser user, string group)
+        {
+            
+            List<object> finalresult = Database.GetUserGroupAlbum(user.Id, group);
+            string complete = "**Not completed.**";
+            List<string> list1 = new ();   
+            List<string> list2 = new ();
+            int collected = 0;
+            int alltogether = 0;
+            foreach (var obj in finalresult)
+            {
+                foreach (var prop in obj.GetType().GetProperties())
+                {
+                    string yesOrNo = "No";
+                    switch (prop.GetValue(obj))
+                    {
+                        case 1:
+                            yesOrNo = "Yes";
+                            collected += 1;
+                            break;
+                        default:
+                            break;
+                    }
+                    if (prop.Name == "Complete")
+                    {
+                        switch (prop.GetValue(obj))
+                        {
+                            case 1:
+                                complete = "**Completed.**";
+                                collected -= 1;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else 
+                    {                   
+                        list1.Add($"> *{prop.Name}*");
+                        list2.Add($"> **{yesOrNo}**");
+                        alltogether += 1; 
+                    }
+                }
+            }
+            var emb = new EmbedBuilder()
+                .WithTitle(group)
+                .WithAuthor("👑 " + user.Username)
+                .WithDescription($"Did you complete the whole album? \n > {complete}")
+                .AddField("Idol", String.Join("\n", list1), true)
+                .AddField("Collected?", String.Join("\n", list2), true)
+                .WithColor(Discord.Color.Teal)
+                .WithFooter($"» {collected} | {alltogether} «", iconUrl: user.GetAvatarUrl())
+                .WithTimestamp(DateTime.Now)
+                .Build();
+            
+            return emb; 
+        }
     }
 }
+
