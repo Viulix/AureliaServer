@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,17 +17,23 @@ namespace Aurelia
             {
                 //Embed
                 ImageProcessor.ImageBuilder(idol[1], idol[0], idol[2], rarity, internalRarity, cardid, "droppedCards");
-                Database.InsertCard(cardid, idol[1], idol[0], idol[2], idol[3], internalRarity, user.Id, 0);
+                Random rnd = new();
+                int rnd1 = internalRarity * rnd.Next(10, 21);
+                int rnd2 = internalRarity * rnd.Next(10, 21);
+                int rnd3 = internalRarity * rnd.Next(10, 21);
+                Database.InsertCard(cardid, idol[1], idol[0], idol[2], idol[3], internalRarity, user.Id, 0, rnd1, rnd2, rnd3);
                 Database.AddCardToInventory(user.Id, cardid);
                 var emb = new EmbedBuilder()
                     .WithColor(idgenerator.rarityTranslator(internalRarity, 1))
                     .WithTimestamp(DateTime.Now)
                     .WithTitle($"✨ {user.Username} dropped a card!")
-                    .WithDescription($"**👤Idol:** \n >>> `[{idgenerator.rarityTranslator(internalRarity, true)}]` | **{idol[0]}**  | ***{idol[2]}***")
+                    .WithDescription($"**👤Idol:** \n >>> `[{idgenerator.rarityTranslator(internalRarity, true)}]` \n **{idol[0]}**  | ***{idol[2]}*** \n **👤__Stats:__** \n \n 🎙️ Voice: {rnd3} \n 💃 Dance: {rnd2} \n 🗣️ Popularity: {rnd1}")
                     .AddField("📋Id:", $">>> **`#{cardid}`**")
                     .WithImageUrl($"attachment://{cardid}1card.png")
                     .WithFooter(user.Username, iconUrl: user.GetAvatarUrl())
                     .Build();
+                var update = Builders<User>.Update.Set<long>(x => x.dropCooldown, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds());
+                Database.UserCollection.FindOneAndUpdate(y => y.id == user.Id, update);
                 return emb;
             }
             catch(Exception ex)
@@ -38,7 +45,7 @@ namespace Aurelia
         public static dynamic randomIdoldInfo(Discord.WebSocket.SocketUser user, int specifisier)
         {
 
-            string cardid = idgenerator.CardIdGenerator(true);
+            string cardid = idgenerator.CardIdGenerator(true, 0);
             int internalRarity = idgenerator.raritySetter();
             string rarity = idgenerator.rarityTranslator(internalRarity, 0);
             var idol = Database.RandomIdol();

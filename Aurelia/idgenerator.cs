@@ -7,7 +7,7 @@ namespace Aurelia
 {
     public class idgenerator
     {
-        public static dynamic CardIdGenerator(bool check)
+        public static dynamic CardIdGenerator(bool check, int identifier)
         {
             string cardid = "";
             while (check is true)
@@ -22,8 +22,15 @@ namespace Aurelia
                     .Take(8)
                     .ToList().ForEach(e => builder.Append(e));
                 cardid = builder.ToString().ToUpper();
-
-                bool cardcheck = Database.CheckCardId(cardid);
+                bool cardcheck = false;
+                if (identifier == 0)
+                {
+                    cardcheck = Database.CheckCardId(cardid);
+                }
+                if (identifier == 1)
+                {
+                    cardcheck = companies.IsSongNameAvailable(cardid);
+                }
 
                 if (cardcheck is false)
                 {
@@ -156,6 +163,41 @@ namespace Aurelia
                     break;
                 case 5:
                     rarity = 500;
+                    break;
+            }
+            return rarity;
+        }
+        public static dynamic NumberInLetterTranslator(int rarityNum)
+        {
+            string rarity = "E";
+            switch (rarityNum)
+            {
+                case 1:
+                    rarity = "E";
+                    break;
+                case 2:
+                    rarity = "D";
+                    break;
+                case 3:
+                    rarity = "C";
+                    break;
+                case 4:
+                    rarity = "B";
+                    break;
+                case 5:
+                    rarity = "A";
+                    break;
+                case 6:
+                    rarity = "A+";
+                    break;
+                case 7:
+                    rarity = "S";
+                    break;
+                case 8:
+                    rarity = "S+";
+                    break;
+                case 9:
+                    rarity = "S++";
                     break;
             }
             return rarity;

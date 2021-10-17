@@ -38,12 +38,17 @@ namespace Aurelia
 
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), serviceProvider);
 
-            await _client.LoginAsync(TokenType.Bot, "");
+            await _client.LoginAsync(TokenType.Bot, "token");
             
             await _client.StartAsync();
 
             await _client.SetGameAsync("with you!", null);
-            
+
+            // For adding fields 
+            // Database.AddNewFields();
+
+            DailyUpdates.DailyUpdate();
+
             await Task.Delay(-1);
         }
         private Task Log(LogMessage msg)

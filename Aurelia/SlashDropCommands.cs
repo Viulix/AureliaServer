@@ -73,18 +73,41 @@ namespace Aurelia
                                    .AddOption(new SlashCommandOptionBuilder()
                                        .WithName("group")
                                        .WithDescription("Creates a new group")
-                                       .WithType(ApplicationCommandOptionType.SubCommand))
+                                       .WithType(ApplicationCommandOptionType.SubCommand)
+                                       .AddOption("name", ApplicationCommandOptionType.String, "The name of your group", required: true))
                                    .AddOption(new SlashCommandOptionBuilder()
                                        .WithName("song")
                                        .WithDescription("Creates a new song")
+                                       .AddOption("groupname", ApplicationCommandOptionType.String, "The name of the group that should make a new song!", required: true)
+                                       .AddOption("songname", ApplicationCommandOptionType.String, "What's the name of the new song?", required: true)
                                        .WithType(ApplicationCommandOptionType.SubCommand));
-
                 list.Add(createCommand);
-                // Money
+                // Add Idol To Group
+                var AddIdolCommand = new SlashCommandBuilder();
+                AddIdolCommand.WithName("addidol");
+                AddIdolCommand.WithDescription("Adds an card to your group!");
+                AddIdolCommand.AddOption("groupname", ApplicationCommandOptionType.String, "The name of the group you want to add the card to!", required: true);
+                AddIdolCommand.AddOption("cardid", ApplicationCommandOptionType.String, "The cardid for the card you want to add!", required: true);
+                list.Add(AddIdolCommand);
+
+                // Show Group
+                var showGroupCommand = new SlashCommandBuilder()
+                    .WithName("showgroup")
+                    .WithDescription("Shows basic information about a group")
+                    .AddOption("name", ApplicationCommandOptionType.String, "The name of the group you want to view", required: true);
+                list.Add(showGroupCommand);
+
+                // Balance
                 var balanceCommand = new SlashCommandBuilder();
                 balanceCommand.WithName("balance");
                 balanceCommand.WithDescription("Shows your Aurelia bank account!");
                 list.Add(balanceCommand);
+
+                // View Company
+                var mycompanyCommand = new SlashCommandBuilder();
+                mycompanyCommand.WithName("mycompany");
+                mycompanyCommand.WithDescription("Shows the basic stats of your company!");
+                list.Add(mycompanyCommand);
 
                 // Daily
                 var dailyDropCommand = new SlashCommandBuilder();
@@ -93,7 +116,6 @@ namespace Aurelia
                 list.Add(dailyDropCommand);
 
                 // Album Command
-
                 var albumCommand = new SlashCommandBuilder();
                 albumCommand.WithName("album");
                 albumCommand.WithDescription("Shows you one of your albums!");

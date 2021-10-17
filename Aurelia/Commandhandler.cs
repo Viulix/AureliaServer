@@ -135,12 +135,27 @@ namespace Aurelia
                         await command.FollowupAsync("> **You have too many cards in your inventory. Please remove some before you drop again!**");
                         return;
                     }
+                    long cooldown = Database.UserDropCooldown(command.User.Id);
+                    var rn = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                    if ((cooldown + 300) > rn && command.User.Id != 300570127869411329)
+                    {
+                        var waitTime = (cooldown + 300) - rn;
+                        int timeMinuts = Convert.ToInt32((waitTime / 60));
+                        var embe = new EmbedBuilder()
+                        .WithColor(Discord.Color.DarkTeal)
+                        .WithTimestamp(DateTime.Now)
+                        .WithTitle("Not so fast!")
+                        .WithDescription($"You cannot drop right now. Please wait `{timeMinuts}min`!")
+                        .WithFooter(command.User.Username, iconUrl: command.User.GetAvatarUrl())
+                        .Build();
+                        await command.FollowupAsync(null, embed: embe);
+                        return;
+                    }
                     string cardid = DropCommands.randomIdoldInfo(command.User, 1);
                     int internalRarity = DropCommands.randomIdoldInfo(command.User, 2);
                     string rarity = DropCommands.randomIdoldInfo(command.User, 3);
                     List<string> idol = DropCommands.randomIdoldInfo(command.User, 4);
                     Embed emb = DropCommands.Drop(command.User, cardid.Remove(0, 1), internalRarity, idgenerator.rarityTranslator(internalRarity, 0), idol);
-                    Console.WriteLine($"assets/droppedCards/{cardid.Remove(0, 1)}1card.png");
                     Database.AlbumAddCard(command.User.Id, idol[0], idol[2]);
                     Database.AddUserXpOrLevel(command.User.Id, internalRarity * 5);
                     Levelsystem.CheckUserLevelUp(command.User.Id);
@@ -154,7 +169,6 @@ namespace Aurelia
                     bool privat = true;
                     try
                     {
-                        Console.WriteLine(command.Data.Options.FirstOrDefault().Value);
                         if (command.Data != null)
                         {
                             privat = Convert.ToBoolean(command.Data.Options.FirstOrDefault().Value);
@@ -254,7 +268,7 @@ namespace Aurelia
                         .WithTitle("Are you sure?")
                         .WithDescription($"*You are about to sell:* \n > ➼ `{idgenerator.rarityTranslator(card.internalRarity, true)}` • **{card.idolName}** | {card.group} \n > That will bring you **`{idgenerator.GetRarityPrice(card.internalRarity)}`**🪙")
                         .Build();
-                    await command.RespondAsync(null, embed: emb, component: ButtonHandler.AcceptAndDenyButtonsSell(1).Build());
+                    await command.RespondAsync(null, embed: emb, component: ButtonHandler.AcceptAndDenyButtonsSell(1).Build(), ephemeral: true);
                 }
                 if (command.Data.Name == "sellall")
                 {
@@ -281,7 +295,7 @@ namespace Aurelia
                         .WithTitle("Are you sure?")
                         .WithDescription($"*You are about to sell:* \n {String.Join("\n", embedTextInventory)} \n > That will bring you **`{price}`**🪙")
                         .Build();
-                    await command.RespondAsync(null, embed: emb, component: ButtonHandler.AcceptAndDenyButtonsSell(2).Build());
+                    await command.RespondAsync(null, embed: emb, component: ButtonHandler.AcceptAndDenyButtonsSell(2).Build(), ephemeral: true);
                 }
                 if (command.Data.Name == "balance")
                 {
@@ -299,11 +313,12 @@ namespace Aurelia
                 if (command.Data.Name == "daily")
                 {
                     var emb = UserCommands.DailyDrop(command.User.Id);
+                    await command.DeferAsync();
+                    await command.FollowupAsync(null, embed: emb);
                     if (Levelsystem.CheckUserLevelUp(command.User.Id) == true)
                     {
-                        await command.RespondAsync($"{command.User.Mention} you just leveled up to** level {Database.UserLevel(command.User.Id, 0)}**!", ephemeral: true);
+                        await command.FollowupAsync($"{command.User.Mention} you just leveled up to** level {Database.UserLevel(command.User.Id, 0)}**!", ephemeral: true);
                     }
-                    await command.RespondAsync(null, embed: emb);
 
                 }
                 if (command.Data.Name == "album")
@@ -320,6 +335,9 @@ namespace Aurelia
                     {
                         case "group":
                             Console.WriteLine("group");
+                            string groupName = command.Data.Options.First().Options.First().Value.ToString();
+                            var groupEmbed = companies.CreateGroup(groupName, command.User.Id);
+                            await command.RespondAsync(null, embed: groupEmbed);
                             break;
                         case "company":
                             Console.WriteLine("company");
@@ -328,16 +346,37 @@ namespace Aurelia
                             await command.RespondAsync(null, embed: companies.CreateCompany(command.User.Id, companyName));
                             break;
                         case "song":
-                            Console.WriteLine("song");
+                            string songname = command.Data.Options.First().Options.Last().Value.ToString();
+                            string groupname = command.Data.Options.First().Options.First().Value.ToString();
+                            var emb = companyCommands.CreateSong(command.User, groupname, songname);
+                            await command.RespondAsync(null, embed: emb);
                             break;
                         default:
                             break;
                     }
                 }
+                if (command.Data.Name == "mycompany")
+                {
+                    var emb = companyCommands.ViewCompany(command.User);
+                    await command.RespondAsync(null, embed: emb);
+                }
+                if (command.Data.Name == "addidol")
+                {
+                    string groupname = (string)command.Data.Options.First();
+                    string cardid = (string)command.Data.Options.Last();
+                    var emb = companies.AddIdol(cardid, command.User.Id, groupname);
+                    await command.RespondAsync(null, embed: emb);
+                }
+                if (command.Data.Name == "showgroup")
+                {
+                    string groupname = (string)command.Data.Options.First().Value;
+                    var emb = companyCommands.ShowGroupEmbed(command.User, groupname);
+                    await command.RespondAsync(null, embed: emb);
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Interaction not found.");
+                Console.WriteLine("Interaction not found or failed to run.");
                 Console.WriteLine(ex);
             }
         }
@@ -422,18 +461,22 @@ namespace Aurelia
                 }
                 try
                 {
+                    if (cardsToSellList.Count == 0)
+                    {
+                        await interaction.RespondAsync($"You already sold these cards.?", ephemeral: true);
+                        return;
+                    }
                     foreach (var item in cardsToSellList)
                     {
                         UserCommands.SellCard(item.id, interaction.User.Id, item.rarity);
                         price += idgenerator.GetRarityPrice(item.rarity);
                     }
-                    await interaction.Message.DeleteAsync();
+                    UserCommands.MemBase.SellAllCardList[interaction.User.Id].Clear();
                     await interaction.RespondAsync($"**Sold the cards for `{price}`🪙.**", ephemeral: true);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex);
-                    await interaction.Message.DeleteAsync();
                     await interaction.RespondAsync($"Something went wrong ... Can you try again?", ephemeral: true);
                 }
             }

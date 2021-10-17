@@ -9,11 +9,11 @@ namespace Aurelia
 {
     public class Database
     {
-        static IMongoClient client = new MongoClient("");
-        static IMongoDatabase db = client.GetDatabase("Aurelia");
-        static IMongoCollection<User> userCollection = db.GetCollection<User>("user");
-        static IMongoCollection<Card> cardidCollection = db.GetCollection<Card>("cardids");
-        static IMongoCollection<Idol> idolCollection = db.GetCollection<Idol>("idols");
+        public static readonly IMongoClient Client = new MongoClient("");
+        public static readonly IMongoDatabase Db = Client.GetDatabase("Aurelia");
+        public static readonly IMongoCollection<User> UserCollection = Db.GetCollection<User>("user");
+        static readonly IMongoCollection<Card> CardCollection = Db.GetCollection<Card>("cardids");
+        static readonly IMongoCollection<Idol> idolCollection = Db.GetCollection<Idol>("idols");
         public static void AddUser(ulong userid)
         {
             var Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
@@ -53,23 +53,23 @@ namespace Aurelia
                     }
                 }
             };
-            userCollection.InsertOne(user);
+            UserCollection.InsertOne(user);
         }
         public static bool CheckUser(ulong userid)
         {
-            var check = userCollection.Find(x => x.id == userid).ToList(); ;
+            var check = UserCollection.Find(x => x.id == userid).ToList(); ;
             if (check.Count == 0) return false;
             else return true;
         }
         public static bool CheckUserInventoryLength(ulong userid)
         {
-            var users = userCollection.Find(x => x.id == userid && x.inventory.Count < 100).ToList();
+            var users = UserCollection.Find(x => x.id == userid && x.inventory.Count < 100).ToList();
             if (users.Count == 0) return false;
             else return true;
         }
         public static List<string> UserInventory(ulong userid, byte format, int x, int y)
         {
-            var results = userCollection.Find(p => p.id == userid).ToList();
+            var results = UserCollection.Find(p => p.id == userid).ToList();
 
             List<string> inv = new List<string>();
             List<string> resultList = new List<string>();
@@ -89,7 +89,7 @@ namespace Aurelia
         }
         public static int UserInventoryLength(ulong userid)
         {
-            var results = userCollection.Find(p => p.id == userid).ToList();
+            var results = UserCollection.Find(p => p.id == userid).ToList();
             List<string> inv = new List<string>();
             foreach (var item in results)
             {
@@ -102,7 +102,7 @@ namespace Aurelia
         }
         public static List<string> UserInventory(ulong userid, int x, int y)
         {
-            var results = userCollection.Find(p => p.id == userid).ToList();
+            var results = UserCollection.Find(p => p.id == userid).ToList();
 
             List<string> inv = new List<string>();
 
@@ -117,7 +117,7 @@ namespace Aurelia
         }
         public static string UserInventory(string cardid)
         {
-            var results = cardidCollection.Find(p => p.id == cardid).ToList();
+            var results = CardCollection.Find(p => p.id == cardid).ToList();
             string result = "";
             byte em = 0;
             try
@@ -136,7 +136,7 @@ namespace Aurelia
         public static int UserBalance(ulong userid)
         {
             int balance = 0;
-            var user = userCollection.Find(x => x.id == userid).Limit(1).ToList();
+            var user = UserCollection.Find(x => x.id == userid).Limit(1).ToList();
             foreach (var item in user)
             {
                 balance = item.balance;
@@ -146,7 +146,7 @@ namespace Aurelia
         public static int UserDiamonds(ulong userid)
         {
             int diamonds = 0;
-            var user = userCollection.Find(x => x.id == userid).Limit(1).ToList();
+            var user = UserCollection.Find(x => x.id == userid).Limit(1).ToList();
             foreach (var item in user)
             {
                 diamonds = item.diamonds;
@@ -156,7 +156,7 @@ namespace Aurelia
         public static UserCommands.Idol FindCard(string cardid)
         {
             UserCommands.Idol idol = new UserCommands.Idol { }; 
-            var results = cardidCollection.Find(p => p.id == cardid).ToList();
+            var results = CardCollection.Find(p => p.id == cardid).ToList();
             if (results == null)
             {
                 idol.exists = false;
@@ -171,11 +171,15 @@ namespace Aurelia
                     idol.group = item.group;
                     idol.internalRarity = item.rarity;
                     idol.owner = item.owner;
+                    idol.dance = item.dance;
+                    idol.voice = item.voice;
+                    idol.popularity = item.popularity;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
+                idol.exists = false;
             }
             return idol;
         }
@@ -183,7 +187,7 @@ namespace Aurelia
         {
             int level = 0;
             int xp = 0;
-            List<User> result = userCollection.Find(x => x.id == userid).ToList();
+            List<User> result = UserCollection.Find(x => x.id == userid).ToList();
             foreach (User item in result)
             {
                 level = item.lvl;
@@ -194,7 +198,7 @@ namespace Aurelia
         }
         public static long UserDailyStamp(ulong userid)
         {
-            var results = userCollection.Find(p => p.id == userid).ToList();
+            var results = UserCollection.Find(p => p.id == userid).ToList();
             long timestamp = 0;
             foreach (var item in results)
             {
@@ -208,7 +212,7 @@ namespace Aurelia
             {
                 var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
                 var update = Builders<User>.Update.Set<long>(e => e.dailystamp, timestamp);
-                userCollection.FindOneAndUpdate(x => x.id == userid, update);
+                UserCollection.FindOneAndUpdate(x => x.id == userid, update);
             }
             catch (Exception ex)
             {
@@ -217,13 +221,13 @@ namespace Aurelia
         }
         public static List<Card> UserInventory(string cardid, bool yee)
         {
-            var results = cardidCollection.Find(p => p.id == cardid).ToList();
+            var results = CardCollection.Find(p => p.id == cardid).ToList();
 
             return results;
         }
         public static List<Card> GetCardsWithRarity(ulong userid, int rarity)
         {
-            var results = userCollection.Find(p => p.id == userid).ToList();
+            var results = UserCollection.Find(p => p.id == userid).ToList();
             List<string> inv = new();
             List<Card> cards = new();
             foreach (var item in results)
@@ -233,7 +237,7 @@ namespace Aurelia
                     inv.Add(item.inventory[i]);
                 }
             }
-            cards = cardidCollection.Find(p => p.owner == userid && p.rarity == rarity).Limit(15).ToList();
+            cards = CardCollection.Find(p => p.owner == userid && p.rarity == rarity).Limit(15).ToList();
             return cards;
         }
         public static void AddCardToInventory(ulong userid, string cardid)
@@ -241,7 +245,7 @@ namespace Aurelia
             try
             {
                 var update = Builders<User>.Update.Push<string>(e => e.inventory, cardid);
-                userCollection.FindOneAndUpdate(x => x.id == userid, update);
+                UserCollection.FindOneAndUpdate(x => x.id == userid, update);
             }
             catch (Exception ex)
             {
@@ -253,7 +257,7 @@ namespace Aurelia
             try
             {
                 var update = Builders<User>.Update.Inc<int>(e => e.xp, xp);
-                userCollection.FindOneAndUpdate(x => x.id == userid, update);
+                UserCollection.FindOneAndUpdate(x => x.id == userid, update);
             }
             catch (Exception ex)
             {
@@ -265,7 +269,7 @@ namespace Aurelia
             try
             {
                 var update = Builders<User>.Update.Inc<int>(e => e.diamonds, diamondAmount);
-                userCollection.FindOneAndUpdate(x => x.id == userid, update);
+                UserCollection.FindOneAndUpdate(x => x.id == userid, update);
             }
             catch (Exception ex)
             {
@@ -277,7 +281,7 @@ namespace Aurelia
             try
             {
                 var update = Builders<User>.Update.Inc<int>(e => e.lvl, lvl);
-                userCollection.FindOneAndUpdate(x => x.id == userid, update);
+                UserCollection.FindOneAndUpdate(x => x.id == userid, update);
             }
             catch (Exception ex)
             {
@@ -289,7 +293,7 @@ namespace Aurelia
 
             try
             {
-                List<User> result = userCollection.Find(x => x.id == userid).ToList();
+                List<User> result = UserCollection.Find(x => x.id == userid).ToList();
                 List<object> finalResult = new();
                 StringBuilder sb = new();
                 foreach (User item in result)
@@ -312,8 +316,8 @@ namespace Aurelia
             try
             {
                 var update = Builders<User>.Update.Inc<Album>(e => e.albums, new Album());
-                List<User> result = userCollection.Find(x => x.id == userid).ToList();
-                List<User> checkResult = userCollection.Find(x => x.id == userid).ToList();
+                List<User> result = UserCollection.Find(x => x.id == userid).ToList();
+                List<User> checkResult = UserCollection.Find(x => x.id == userid).ToList();
                 foreach (User item in result)
                 {
                     var groupObj = item.albums.GetType().GetProperty(group).GetValue(item.albums);
@@ -327,7 +331,6 @@ namespace Aurelia
                     foreach (var idol in groupObj.GetType().GetProperties())
                     {
                         var it = Convert.ToInt32(idol.GetValue(groupObj));
-                        Console.WriteLine(it);
                         if (it == 0 && idol.Name != "Complete")
                         {
                             proof = false;
@@ -341,7 +344,7 @@ namespace Aurelia
                     }
                     update = Builders<User>.Update.Set<Album>(e => e.albums, item.albums);
                 }
-                userCollection.FindOneAndUpdate(x => x.id == userid, update);
+                UserCollection.FindOneAndUpdate(x => x.id == userid, update);
             }
             catch (Exception ex)
             {
@@ -350,21 +353,21 @@ namespace Aurelia
         }
         public static bool CheckCardId(string cardid)
         {
-            var check = cardidCollection.Find(x => x.id == cardid).ToList();
+            var check = CardCollection.Find(x => x.id == cardid).ToList();
             if (check.Count == 0) return false;
             else return true;
         }
         public static void RemoveCard(string cardid, ulong userid)
         {
-            var check = cardidCollection.Find(x => x.id == cardid).ToList();
+            var check = CardCollection.Find(x => x.id == cardid).ToList();
             if (check.Count == 0) return;
             else
             {
                 try
                 {
                     var update = Builders<User>.Update.Pull<string>(e => e.inventory, cardid);
-                    userCollection.FindOneAndUpdate(x => x.id == userid, update);
-                    cardidCollection.FindOneAndDelete(c => c.id == cardid);
+                    UserCollection.FindOneAndUpdate(x => x.id == userid, update);
+                    CardCollection.FindOneAndDelete(c => c.id == cardid);
                 }
                 catch (Exception ex)
                 {
@@ -372,9 +375,27 @@ namespace Aurelia
                 }
             }
         }
-        public static void InsertCard(string cardid, string filename, string idol, string group, string era, int rarity, ulong userid, int shiny)
+        public static void RemoveFromInventoryOnly(string cardid, ulong userid)
         {
-            Card newCard = new Card
+            var check = CardCollection.Find(x => x.id == cardid).ToList();
+            if (check.Count == 0) return;
+            else
+            {
+                try
+                {
+                    var update = Builders<User>.Update.Pull<string>(e => e.inventory, cardid);
+                    UserCollection.FindOneAndUpdate(x => x.id == userid, update);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
+        }
+        public static void InsertCard(string cardid, string filename, string idol, string group, string era, int rarity, ulong userid, int shiny, int rnd1, int rnd2, int rnd3)
+        {
+            Random rnd = new ();
+            Card newCard = new()
             {
                 id = cardid,
                 owner = userid,
@@ -383,16 +404,41 @@ namespace Aurelia
                 group = group,
                 era = era,
                 rarity = rarity,
-                shiny = shiny
+                shiny = shiny,
+                popularity = rnd1,
+                dance = rnd2,
+                voice = rnd3
             };
             try
             {
-                cardidCollection.InsertOne(newCard);
+                CardCollection.InsertOne(newCard);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
+        }
+        public static void AddNewFields()
+        {
+
+            var allcards = UserCollection.Find(Builders<User>.Filter.Empty).ToList();
+            Random rnd = new();
+            foreach (var card in allcards)
+            {
+                var update = Builders<User>.Update.Set(x => x.dropCooldown, 0);
+                var options = new UpdateOptions { IsUpsert = true };
+                UserCollection.UpdateOne(x => x.id == card.id, update, options);
+            }
+        }
+        public static long UserDropCooldown(ulong userid)
+        {
+            var users = UserCollection.Find(x => x.id == userid).ToList();
+            long cooldown = 0;
+            foreach (var user in users)
+            {
+                cooldown = user.dropCooldown;
+            }
+            return cooldown;
         }
         public static dynamic RandomIdol()
         {
@@ -409,10 +455,15 @@ namespace Aurelia
             }
             return idol;
         }
+        public static List<Card> GetAllCardsInDatabase()
+        {
+            var cards = CardCollection.Find(Builders<Card>.Filter.Empty).ToList();
+            return cards;
+        }
         public static void AddMoneyToUser(ulong userid, int amount)
         {
             var update = Builders<User>.Update.Inc(x => x.balance, amount);
-            userCollection.FindOneAndUpdate(x => x.id == userid, update);
+            UserCollection.FindOneAndUpdate(x => x.id == userid, update);
         }
     }
 }

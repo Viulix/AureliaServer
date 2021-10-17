@@ -25,6 +25,9 @@ namespace Aurelia
             public ulong owner;
             public string idolName;
             public string group;
+            public int dance;
+            public int voice;
+            public int popularity;
 
         }
         public static Embed UserProfile(SocketUser user)
@@ -69,11 +72,25 @@ namespace Aurelia
             int z = UserCommands.MemBase.InvValues[user.Id].z;
             try
             {
+                if (x >= Database.UserInventoryLength(user.Id))
+                {
+                    y = Database.UserInventoryLength(user.Id);
+                    x = y - 15;
+                    z = y / 15;
+                    Console.WriteLine(x + "|" + y + "|" + z);
+                }
+                else if (x <= 0 || y <= 0)
+                { 
+                    x = 0;
+                    y = 14;
+                    z = 1;
+                }
                 byte kek = 0;
+                MemBase.InvValues[user.Id] = (x, y, z);
                 List<string> inv = Database.UserInventory(user.Id, x, y);
                 List<string> invIdol = new List<string>();
 
-                decimal d = 14;
+                decimal d = 15;
                 decimal inventoryPages = Math.Ceiling(Convert.ToDecimal(Database.UserInventoryLength(user.Id)) / d);
                 string space = "\n";
                 var Emb = new EmbedBuilder()
@@ -87,13 +104,6 @@ namespace Aurelia
                     .WithTimestamp(DateTime.Now)
                     .Build();
 
-                if (x <= 0 || y <= 0)
-                { 
-                    x = 0;
-                    y = 14;
-                    z = 1;
-                }
-                MemBase.InvValues[user.Id] = (x, y, z);
                 return Emb;
 
             }
@@ -113,6 +123,7 @@ namespace Aurelia
             int z = UserCommands.MemBase.InvValues[user.Id].z;
             try
             {
+                Console.WriteLine(x + "|" + y + "|" + z);
                 if (x <= 0 || y <= 0)
                 {
                     button1 = true;
@@ -124,7 +135,6 @@ namespace Aurelia
                 if (y >= Database.UserInventoryLength(user.Id))
                 {
                     button2 = true;
-                    Console.WriteLine(2);
                 }
                 else if (Database.UserInventoryLength(user.Id) <= y)
                 {
@@ -147,9 +157,7 @@ namespace Aurelia
         public static void SellCard(string cardid, ulong userid, int internalRarity)
         {
             Database.RemoveCard(cardid, userid);
-            Console.WriteLine(idgenerator.GetRarityPrice(internalRarity));
             Database.AddMoneyToUser(userid, idgenerator.GetRarityPrice(internalRarity));
-            Console.WriteLine("Done.");
         }
         public static Embed DailyDrop(ulong userid)
         {
@@ -180,14 +188,13 @@ namespace Aurelia
             {
                 // Determining the time the user has to wait for the next drop
                 long waitTime = (userTimestamp + 86400) - new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
-                Console.WriteLine(waitTime);
                 int timeHours = Convert.ToInt32(waitTime / 3600);
                 int timeMinuts = Convert.ToInt32((waitTime / 60) % 60);
 
                 Embed emb = new EmbedBuilder()
                     .WithTitle("Oh.. Please wait a bit longer...")
                     .WithColor(Discord.Color.Teal)
-                    .WithDescription($"Calm down. Please wait `{timeHours}h{timeMinuts}m` until you get your daily drop again!")
+                    .WithDescription($"Calm down. Please wait `{timeHours}h {timeMinuts}min` until you get your daily drop again!")
                     .Build();
                 return emb;
             }

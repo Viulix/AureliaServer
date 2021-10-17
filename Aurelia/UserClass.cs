@@ -8,6 +8,7 @@ namespace Aurelia
         [BsonId]
         public ulong id { get; set; }
         public long dailystamp { get; set; }
+        public long dropCooldown { get; set; }
         public long joined { get; set; }
         public int lvl { get; set; }
         public int xp { get; set; }
