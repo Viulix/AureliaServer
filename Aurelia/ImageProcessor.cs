@@ -90,13 +90,15 @@ namespace Aurelia
                 using Bitmap cardTemp = new($"assets/groups/{group}/{idolname}/{filename}");
                 using Bitmap card = new(cardTemp, 800, 1200);
                 using Bitmap rareFrameTemp = new($"assets/frames/{rarity}Frame.png");
-                using Bitmap rareFrame = new(rareFrameTemp, frameWidth, frameHeight);
                 using Bitmap rareFrame2 = new(rareFrameTemp, frameWidth, frameHeight);
-                using (Graphics g = Graphics.FromImage(rareFrame))
+                using Bitmap rareFrame = new(rareFrameTemp, frameWidth, frameHeight);
+                {
+                    using (Graphics g = Graphics.FromImage(rareFrame))
                         g.DrawImage(card, width, height);
-                using (Graphics g = Graphics.FromImage(rareFrame))
+                    using (Graphics g = Graphics.FromImage(rareFrame))
                         g.DrawImage(rareFrame2, 0, 0);
-                rareFrame.Save($"assets/{pathDefiner}/{id}card.png");
+                    rareFrame.Save($"assets/{pathDefiner}/{id}card.png");
+                }
                 var readSettings = new MagickReadSettings()
                 {
                     Font = "assets/fonts/walrus/Walrus-Bold.ttf",

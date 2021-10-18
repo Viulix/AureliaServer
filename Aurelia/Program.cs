@@ -38,7 +38,7 @@ namespace Aurelia
 
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), serviceProvider);
 
-            await _client.LoginAsync(TokenType.Bot, "token");
+            await _client.LoginAsync(TokenType.Bot, "");
             
             await _client.StartAsync();
 
