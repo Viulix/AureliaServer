@@ -37,7 +37,7 @@
   },
   {
     "_id": 6,
-    "filename": "rose1.png",
+    "filename": "rosee12.jpg",
     "idol": "Rose",
     "group": "BLACKPINK",
     "era": "Not defined"
@@ -51,7 +51,7 @@
   },
   {
     "_id": 8,
-    "filename": "rose3.png",
+    "filename": "rose23.jpg",
     "idol": "Rose",
     "group": "BLACKPINK",
     "era": "Not defined"
@@ -85,13 +85,6 @@
     "era": "The Feels"
   },
   {
-    "_id": 12,
-    "filename": "tzuyu_thefeels1.jpeg",
-    "idol": "Tzuyu",
-    "group": "TWICE",
-    "era": "The Feels"
-  },
-  {
     "_id": 13,
     "filename": "jeongyeon_thefeels1.jpeg",
     "idol": "Jeongyeon",
@@ -106,46 +99,81 @@
     "era": "The Feels"
   },
   {
-    "_id": 13,
+    "_id": 15,
     "filename": "jihyo_thefeels1.jpeg",
     "idol": "Jihyo",
     "group": "TWICE",
     "era": "The Feels"
   },
   {
-    "_id": 13,
+    "_id": 16,
     "filename": "chaeyoung_thefeels1.jpeg",
     "idol": "Chaeyoung",
     "group": "TWICE",
     "era": "The Feels"
   },
   {
-    "_id": 14,
+    "_id": 17,
     "filename": "dahyun_thefeels1.jpeg",
     "idol": "Dahyun",
     "group": "TWICE",
     "era": "The Feels"
   },
   {
-    "_id": 15,
+    "_id": 18,
     "filename": "momo_thefeels1.jpeg",
     "idol": "Momo",
     "group": "TWICE",
     "era": "The Feels"
   },
   {
-    "_id": 16,
+    "_id": 19,
     "filename": "sana_thefeels1.jpeg",
     "idol": "Sana",
     "group": "TWICE",
     "era": "The Feels"
   },
   {
-    "_id": 17,
+    "_id": 20,
     "filename": "mina_thefeels1.jpeg",
     "idol": "Mina",
     "group": "TWICE",
     "era": "The Feels"
+  },
+  {
+    "_id": 21,
+    "filename": "lovesickgirls_lisa.jpg",
+    "idol": "Lisa",
+    "group": "BLACKPINK",
+    "era": "Lovesick Girls"
+  },
+  {
+    "_id": 22,
+    "filename": "lovesickgirls_jennie.jpg",
+    "idol": "Jennie",
+    "group": "BLACKPINK",
+    "era": "Lovesick Girls"
+  },
+  {
+    "_id": 23,
+    "filename": "killthislove_lisa.png",
+    "idol": "Lisa",
+    "group": "BLACKPINK",
+    "era": "Kill This Love"
+  },
+  {
+    "_id": 24,
+    "filename": "blackpink_killthislove_lisa.jpg",
+    "idol": "Lisa",
+    "group": "BLACKPINK",
+    "era": "Kill This Love"
+  },
+  {
+    "_id": 25,
+    "filename": "asifitsyourlast_lisa.png",
+    "idol": "Lisa",
+    "group": "BLACKPINK",
+    "era": "As If It's Your Last"
   }
 ]
 
